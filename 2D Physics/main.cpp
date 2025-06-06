@@ -3,45 +3,17 @@
 #endif
 
 #include <Windows.h>
+#include <iostream>
+#include "Window.h"
+
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	// Register the window class.
-	const wchar_t CLASS_NAME[] = L"Sample Window Class";
+	MainWindow win;
 
-	WNDCLASS wc = {};
-
-	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.lpszClassName = CLASS_NAME;
-
-	RegisterClass(&wc);
-
-	// Create the window.
-
-	HWND hwnd = CreateWindowEx(
-		0,                           // optional window styles.
-		CLASS_NAME,                  // Window class
-		L"Learn to Program Windows", // Window text
-		WS_OVERLAPPEDWINDOW,         // Window style
-
-		//  Size and position
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-
-		NULL,      // Parent Window
-		NULL,      // Menu
-		hInstance, // Instance handel
-		NULL       // Additional application data
-	); 
-
-	if (hwnd == NULL)
-	{
-		return 0;
-	}
-
-	ShowWindow(hwnd, nCmdShow);
+	if()
 
 	// Run the message loop.
 
@@ -63,6 +35,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
+
+	case WM_CLOSE:
+		if (MessageBox(hwnd, L"Really quit?", L"My application", MB_OKCANCEL) == IDOK)
+		{
+			DestroyWindow(hwnd);
+		}
+		return 0;
 
 	case WM_PAINT:
 	{
