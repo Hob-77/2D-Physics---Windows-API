@@ -7,8 +7,30 @@
 #include <Windows.h>
 #include <glad/glad.h>
 
+// My Classes
 #include "BWindow.h"
 #include "Window.h"
+#include "Vec2.h"
+#include "SimpleRenderer.h"
+
+struct PhysicsState
+{
+	Vec2 position;
+	Vec2 velocity;
+
+	// Constructor
+	PhysicsState() : position(0.0f,0.0f), velocity(0.0f,0.0f) {}
+	PhysicsState(Vec2 pos, Vec2 vel) : position(pos), velocity(vel) {}
+
+	// Interpolation between two states
+	PhysicsState Interpolate(const PhysicsState& other, float alpha) const
+	{
+		PhysicsState result;
+		result.position = position * alpha + other.position * (1.0f - alpha);
+		result.velocity = velocity * alpha + other.velocity * (1.0f - alpha);
+		return result;
+	}
+};
 
 double GetTimeInSeconds()
 {
@@ -39,6 +61,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		return 0;
 	}
 
+	SimpleRenderer renderer;
+	renderer.Initialize();
+
 	ShowWindow(win.Window(), nCmdShow);
 
 	// Fixed timestep Glenn Fielder
@@ -46,6 +71,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	const double dt = 0.01;
 	double currentTime = GetTimeInSeconds();
 	double accumulator = 0.0;
+
+	PhysicsState previousState(Vec2(400.0f, 300.0f), Vec2(100.0f, 0.0f));
+	PhysicsState currentState = previousState;
 
 	MSG msg = {};
 	while (true)
@@ -66,11 +94,62 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		while (accumulator >= dt)
 		{
+			previousState = currentState;
+
+			// Get Window size
+			RECT clientRect;
+			GetClientRect(win.Window(), &clientRect);
+			float windowWidth = (float)(clientRect.right - clientRect.left);
+			float windowHeight = (float)(clientRect.bottom - clientRect.top);
+
+			// Apply gravity
+			const float gravity = -500.0f;
+			currentState.velocity.y += gravity * dt;
+
+			currentState.position += currentState.velocity * dt;
+
+			// Bounce off walls (using actual window dimensions)
+			float ballRadius = 25.0f;
+			if (currentState.position.x <= ballRadius || currentState.position.x >= (windowWidth - ballRadius))
+			{
+				currentState.velocity.x = -currentState.velocity.x;
+				currentState.position.x = (currentState.position.x <= ballRadius) ? ballRadius : (windowWidth - ballRadius);
+			}
+
+			// Bounce off top/bottom
+			if (currentState.position.y <= ballRadius || currentState.position.y >= (windowHeight - ballRadius))
+			{
+				currentState.velocity.y = -currentState.velocity.y;
+				currentState.position.y = (currentState.position.y <= ballRadius) ? ballRadius : (windowHeight - ballRadius);
+			}
+
 			t += dt;
 			accumulator -= dt;
 		}
 
-		win.Render();
+		// interpolation 
+		const double alpha = accumulator / dt;
+		PhysicsState renderState = currentState.Interpolate(previousState, alpha);
+
+		// Window resizing
+		RECT clientRect;
+		GetClientRect(win.Window(), &clientRect);
+		float windowWidth = (float)(clientRect.right - clientRect.left);
+		float windowHeight = (float)(clientRect.bottom - clientRect.top);
+		renderer.SetProjection(0.0f, windowWidth, windowHeight, 0.0f);
+
+		// Update OpenGL viewport and projection for current window size
+		glViewport(0, 0, (int)windowWidth, (int)windowHeight);
+		renderer.SetProjection(0.0f, windowWidth, 0.0f,windowHeight);
+
+		glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		float ballRadius = 25.0f;
+		Vec2 ballSize(ballRadius * 2.0f, ballRadius * 2.0f);
+		renderer.DrawRectangle(renderState.position, ballSize, 1.0f, 0.5f, 0.2f, 1.0f);
+
+		SwapBuffers(GetDC(win.Window()));
  	}
 
 	exit_loop:

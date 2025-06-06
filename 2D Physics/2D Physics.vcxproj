@@ -129,9 +129,13 @@
   <ItemGroup>
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SimpleRenderer.cpp" />
+    <ClCompile Include="Vec2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BWindow.h" />
+    <ClInclude Include="SimpleRenderer.h" />
+    <ClInclude Include="Vec2.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
