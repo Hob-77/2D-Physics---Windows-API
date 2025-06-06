@@ -2,50 +2,34 @@
 #define UNICODE
 #endif
 
-#include <Windows.h>
+#include <iostream>
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#include <Windows.h>
+#include <glad/glad.h>
+
+#include "BWindow.h"
+#include "Window.h"
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	// Register the window class.
-	const wchar_t CLASS_NAME[] = L"Sample Window Class";
+	MainWindow win;
 
-	WNDCLASS wc = {};
-
-	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.lpszClassName = CLASS_NAME;
-
-	RegisterClass(&wc);
-
-	// Create the window.
-
-	HWND hwnd = CreateWindowEx(
-		0,                           // optional window styles.
-		CLASS_NAME,                  // Window class
-		L"Learn to Program Windows", // Window text
-		WS_OVERLAPPEDWINDOW,         // Window style
-
-		//  Size and position
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-
-		NULL,      // Parent Window
-		NULL,      // Menu
-		hInstance, // Instance handel
-		NULL       // Additional application data
-	); 
-
-	if (hwnd == NULL)
+	if (!win.Create(L"Learn to Program Windows", WS_OVERLAPPEDWINDOW))
 	{
 		return 0;
 	}
 
-	ShowWindow(hwnd, nCmdShow);
+	if (!win.InitializeOpenGL())
+	{
+		MessageBox(NULL, L"Failed to initialize OpenGL", L"Error", MB_OK);
+		return 0;
+	}
 
-	// Run the message loop.
+	ShowWindow(win.Window(), nCmdShow);
 
-	MSG msg = {};
+		// Run the message loop.
+
+		MSG msg = {};
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
 		TranslateMessage(&msg);
@@ -56,26 +40,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 }
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
 	case WM_DESTROY:
+		    CleanupOpenGL();
 			PostQuitMessage(0);
 			return 0;
 
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hwnd, &ps);
-
-		// All painting occurs here, between BeginPaint and EndPaint.
-
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
-
-		EndPaint(hwnd, &ps);
+		BeginPaint(m_hwnd, &ps);
+		Render();
+		EndPaint(m_hwnd, &ps);
 	}
 	return 0;
+
+	default:
+		return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 	}
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return TRUE;
 }
