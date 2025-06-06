@@ -10,11 +10,25 @@
 #include "BWindow.h"
 #include "Window.h"
 
+double GetTimeInSeconds()
+{
+	static LARGE_INTEGER frequency;
+	static BOOL first = TRUE;
+	if (first)
+	{
+		QueryPerformanceFrequency(&frequency);
+			first = FALSE;
+	}
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+	return(double)counter.QuadPart / (double)frequency.QuadPart;
+}
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	MainWindow win;
 
-	if (!win.Create(L"Learn to Program Windows", WS_OVERLAPPEDWINDOW))
+	if (!win.Create(L"Physics Engine", WS_OVERLAPPEDWINDOW))
 	{
 		return 0;
 	}
@@ -27,39 +41,38 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	ShowWindow(win.Window(), nCmdShow);
 
-		// Run the message loop.
+	// Fixed timestep Glenn Fielder
+	double t = 0.0;
+	const double dt = 0.01;
+	double currentTime = GetTimeInSeconds();
+	double accumulator = 0.0;
 
-		MSG msg = {};
-	while (GetMessage(&msg, NULL, 0, 0) > 0)
+	MSG msg = {};
+	while (true)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT) goto exit_loop;
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
 
+		double newTime = GetTimeInSeconds();
+		double frameTime = newTime - currentTime;
+		if (frameTime > 0.25) frameTime = 0.25;
+		currentTime = newTime;
+
+		accumulator += frameTime;
+
+		while (accumulator >= dt)
+		{
+			t += dt;
+			accumulator -= dt;
+		}
+
+		win.Render();
+ 	}
+
+	exit_loop:
 	return 0;
-
-}
-
-LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
-	{
-	case WM_DESTROY:
-		    CleanupOpenGL();
-			PostQuitMessage(0);
-			return 0;
-
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		BeginPaint(m_hwnd, &ps);
-		Render();
-		EndPaint(m_hwnd, &ps);
-	}
-	return 0;
-
-	default:
-		return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
-	}
-	return TRUE;
 }
