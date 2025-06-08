@@ -106,20 +106,23 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 			const float gravity = -500.0f;
 			currentState.velocity.y += gravity * dt;
 
+			// Apply friction on collisions
+			const float resitution = 0.85f;
+
 			currentState.position += currentState.velocity * dt;
 
 			// Bounce off walls (using actual window dimensions)
 			float ballRadius = 25.0f;
 			if (currentState.position.x <= ballRadius || currentState.position.x >= (windowWidth - ballRadius))
 			{
-				currentState.velocity.x = -currentState.velocity.x;
+				currentState.velocity.x = -currentState.velocity.x * resitution;
 				currentState.position.x = (currentState.position.x <= ballRadius) ? ballRadius : (windowWidth - ballRadius);
 			}
 
 			// Bounce off top/bottom
 			if (currentState.position.y <= ballRadius || currentState.position.y >= (windowHeight - ballRadius))
 			{
-				currentState.velocity.y = -currentState.velocity.y;
+				currentState.velocity.y = -currentState.velocity.y * resitution;
 				currentState.position.y = (currentState.position.y <= ballRadius) ? ballRadius : (windowHeight - ballRadius);
 			}
 
