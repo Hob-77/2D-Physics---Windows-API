@@ -12,6 +12,7 @@
 #include "Window.h"
 #include "Vec2.h"
 #include "SimpleRenderer.h"
+#include "Input.h"
 
 struct PhysicsState
 {
@@ -92,15 +93,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		accumulator += frameTime;
 
+		// Get Window size
+		RECT clientRect;
+		GetClientRect(win.Window(), &clientRect);
+		float windowWidth = (float)(clientRect.right - clientRect.left);
+		float windowHeight = (float)(clientRect.bottom - clientRect.top);
+
 		while (accumulator >= dt)
 		{
 			previousState = currentState;
-
-			// Get Window size
-			RECT clientRect;
-			GetClientRect(win.Window(), &clientRect);
-			float windowWidth = (float)(clientRect.right - clientRect.left);
-			float windowHeight = (float)(clientRect.bottom - clientRect.top);
 
 			// Apply gravity
 			const float gravity = -500.0f;
@@ -108,6 +109,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 			// Apply friction on collisions
 			const float resitution = 0.85f;
+
+			// Apply air resistance in the x and y axis
+			const float airResistance = 0.999f;
+
+			currentState.velocity.x *= airResistance;
+			currentState.velocity.y *= airResistance;
 
 			currentState.position += currentState.velocity * dt;
 
@@ -126,6 +133,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 				currentState.position.y = (currentState.position.y <= ballRadius) ? ballRadius : (windowHeight - ballRadius);
 			}
 
+			bool onGround = { currentState.position.y <= ballRadius };
+
+			if ( onGround )
+			{
+				const float slidingFriction = 0.98f;
+				currentState.velocity.x *= slidingFriction;
+			}
+
 			t += dt;
 			accumulator -= dt;
 		}
@@ -133,13 +148,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		// interpolation 
 		const double alpha = accumulator / dt;
 		PhysicsState renderState = currentState.Interpolate(previousState, alpha);
-
-		// Window resizing
-		RECT clientRect;
-		GetClientRect(win.Window(), &clientRect);
-		float windowWidth = (float)(clientRect.right - clientRect.left);
-		float windowHeight = (float)(clientRect.bottom - clientRect.top);
-		renderer.SetProjection(0.0f, windowWidth, windowHeight, 0.0f);
 
 		// Update OpenGL viewport and projection for current window size
 		glViewport(0, 0, (int)windowWidth, (int)windowHeight);
@@ -150,7 +158,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		float ballRadius = 25.0f;
 		Vec2 ballSize(ballRadius * 2.0f, ballRadius * 2.0f);
-		renderer.DrawRectangle(renderState.position, ballSize, 1.0f, 0.5f, 0.2f, 1.0f);
+		renderer.DrawWireframeRectangle(renderState.position, ballSize);
 
 		SwapBuffers(GetDC(win.Window()));
  	}
