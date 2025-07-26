@@ -1,39 +1,38 @@
 # 2D Physics Engine (Windows API + OpenGL)
-Early physics engine prototype built while learning Windows API and OpenGL fundamentals.
+Physics engine built using Windows API and OpenGL, created before my 2D platformer engine with level editor.
 
 ## Overview
-This project represents my first attempt at building a physics engine from scratch. While learning the Windows API for window management and OpenGL for rendering, I implemented basic physics simulation with proper fixed timestep integration.
+A focused physics simulation project exploring Windows API for window management and OpenGL for rendering. This engine implements proper fixed timestep physics simulation with interpolation.
 
-## Features Implemented
+## Features
 - **Windows API Integration**: Custom window class using Win32 API
-- **OpenGL Rendering**: Basic shader-based rendering system
+- **OpenGL Rendering**: Shader-based rendering with OpenGL 4.6
 - **Physics Simulation**:
-  - Velocity and position integration
-  - Gravity simulation
-  - Wall bouncing with restitution
-  - Air resistance
-  - Ground friction
+  - Velocity-based movement with gravity
+  - Collision response with walls (restitution/bouncing)
+  - Air resistance simulation
+  - Ground friction when in contact
   - Fixed timestep with interpolation (Glenn Fiedler's method)
   
-## Technical Highlights
-- Custom Vec2 math class
-- Input management system
-- Shader-based renderer with orthographic projection
-- Proper game loop with accumulator-based fixed timestep
-- State interpolation for smooth rendering
+## Technical Implementation
+- **Fixed Timestep Loop**: Deterministic physics at 100 Hz (dt = 0.01)
+- **State Interpolation**: Smooth rendering between physics steps
+- **Custom Math**: Vec2 class for 2D vector operations
+- **Modern OpenGL**: Shader-based rendering pipeline
+- **High-precision Timing**: QueryPerformanceCounter for accurate frame timing
 
 ## Architecture
 - `BaseWindow`: Template-based Win32 window wrapper
-- `SimpleRenderer`: OpenGL 4.6 shader-based rendering
-- `InputManager`: Mouse and keyboard input handling
-- `PhysicsState`: Position/velocity state with interpolation
+- `SimpleRenderer`: VAO/VBO-based rendering with GLSL shaders
+- `InputManager`: Mouse input handling (framework for interaction)
+- `PhysicsState`: Interpolatable physics state
 
-## What I Learned
-This project taught me:
+## Key Learning
+This project solidified my understanding of:
+- Game loop architecture with fixed timestep
+- Separating physics updates from rendering
 - Low-level Windows API programming
-- OpenGL initialization and rendering pipeline
-- Importance of fixed timestep for deterministic physics
-- Frame interpolation for smooth visual results
+- Modern OpenGL practices
 
-## Note
-While this implementation worked, I later moved to SDL for cross-platform support and built a more comprehensive physics engine with collision detection, as seen in my 2D Physics Engine project.
+## Evolution
+After this project, I moved to SDL for my next engine (2D platformer with editor) for cross-platform support, but the physics and architecture knowledge from this project carried forward.
